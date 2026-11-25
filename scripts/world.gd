@@ -309,7 +309,7 @@ func _walkway(o: Dictionary, axis: Vector3, half_len: float, half_w: float, arch
 		var u := float(i) / N
 		var t := lerpf(-ext, ext, u)
 		var base := lerpf(ga - 0.03, gb - 0.03, u)
-		var y := maxf(base, top) + arch * sin(u * PI) if both_ends else lerpf(ga - 0.03, top, minf(u * 4.0, 1.0))
+		var y := lerpf(base, top + arch, sin(u * PI)) if both_ends else lerpf(ga - 0.03, top, minf(u * 4.0, 1.0))
 		pts.append(axis * t + Vector3(0, y, 0))
 	for i in N:
 		var a0: Vector3 = pts[i] - side * half_w
