@@ -197,13 +197,11 @@ func _build_objects() -> void:
 			"gate":
 				_place(Props.gate(), o)
 			"bridge":
-				var b := _place(Props.bridge(), o)
-				b.position.y = 0.0
-				walk_rects.append([b.transform, 2.2, 0.65])
+				var b := _walkway(o, Vector3.RIGHT, 2.2, 0.65, 0.18, true)
+				walk_rects.append([b.transform, 2.6, 0.65])
 			"pier":
-				var p := _place(Props.pier(), o)
-				p.position.y = 0.0
-				walk_rects.append([p.transform, 0.62, 1.6])
+				var p := _walkway(o, Vector3.BACK, 1.6, 0.62, 0.0, false)
+				walk_rects.append([p.transform, 0.62, 2.0])
 			"lantern":
 				_place(Props.lantern(), o)
 			"stump":
@@ -287,6 +285,69 @@ func _build_objects() -> void:
 				animals.append({"node": d, "home": d.position, "t": 0.0, "target": d.position, "fast": true})
 	_multimesh_trees(trees, false)
 	_multimesh_trees(apple_trees, true)
+
+## A bridge or pier whose deck meets the ground exactly at its ends (so there is no lip to trip on),
+## with a gentle arch over the water. `axis` is the walking direction in the object's own space.
+func _walkway(o: Dictionary, axis: Vector3, half_len: float, half_w: float, arch: float, both_ends: bool) -> Node3D:
+	var n := Node3D.new()
+	var x0 := float(o["x"])
+	var z0 := float(o["z"])
+	n.position = Vector3(x0, 0, z0)
+	n.rotation.y = float(o.get("r", 0)) * PI / 4.0
+	add_child(n)
+	var side := axis.cross(Vector3.UP).normalized()
+	var ext := half_len + 0.45                    # run a little way onto the banks
+	var w := func(t: float) -> Vector3: return n.transform * (axis * t)
+	var ga := height_at(w.call(-ext).x, w.call(-ext).z)
+	var gb := height_at(w.call(ext).x, w.call(ext).z) if both_ends else ga
+	var top := maxf(maxf(ga, gb), WATER_SURF + 0.12)
+	var N := 12
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var pts := []
+	for i in N + 1:
+		var u := float(i) / N
+		var t := lerpf(-ext, ext, u)
+		var base := lerpf(ga - 0.03, gb - 0.03, u)
+		var y := maxf(base, top) + arch * sin(u * PI) if both_ends else lerpf(ga - 0.03, top, minf(u * 4.0, 1.0))
+		pts.append(axis * t + Vector3(0, y, 0))
+	for i in N:
+		var a0: Vector3 = pts[i] - side * half_w
+		var a1: Vector3 = pts[i] + side * half_w
+		var b0: Vector3 = pts[i + 1] - side * half_w
+		var b1: Vector3 = pts[i + 1] + side * half_w
+		for v in [a0, b0, b1, a0, b1, a1]:
+			st.add_vertex(v)
+		# a little thickness under the deck, so it doesn't look paper thin
+		var d := Vector3(0, -0.12, 0)
+		for v in [a0 + d, a1 + d, b1 + d, a0 + d, b1 + d, b0 + d]:
+			st.add_vertex(v)
+	st.generate_normals()
+	var mesh := st.commit()
+	var mi := MeshInstance3D.new()
+	mi.mesh = mesh
+	mi.material_override = Toon.mat(Toon.hex(Props.WOOD))
+	n.add_child(mi)
+	var body := StaticBody3D.new()
+	var cs := CollisionShape3D.new()
+	cs.shape = mesh.create_trimesh_shape()
+	body.add_child(cs)
+	n.add_child(body)
+	# rails and posts (bridge) or posts (pier)
+	for i in range(1, N, 2):
+		var p: Vector3 = pts[i]
+		for sgn in [-1.0, 1.0]:
+			var post := Props.mi(n, Props.cyl(0.04, 0.05, 0.6 if both_ends else 1.0, 6), Props.DARKWOOD, p + side * (half_w - 0.05) * sgn + Vector3(0, 0.25 if both_ends else -0.3, 0))
+			post.name = "Post"
+	if both_ends:
+		for sgn in [-1.0, 1.0]:
+			for i in N:
+				var q0: Vector3 = pts[i] + side * (half_w - 0.05) * sgn + Vector3(0, 0.55, 0)
+				var q1: Vector3 = pts[i + 1] + side * (half_w - 0.05) * sgn + Vector3(0, 0.55, 0)
+				var rail := Props.mi(n, Props.box(0.06, 0.06, q0.distance_to(q1) + 0.02), Props.DARKWOOD, (q0 + q1) * 0.5)
+				rail.look_at_from_position(rail.position, q1, Vector3.UP)
+				rail.position = (q0 + q1) * 0.5
+	return n
 
 func _tree_xf(o: Dictionary) -> Transform3D:
 	var x := float(o["x"])

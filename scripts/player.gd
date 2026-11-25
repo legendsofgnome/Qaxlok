@@ -52,7 +52,14 @@ func _physics_process(delta: float) -> void:
 		velocity.y = -0.5
 	else:
 		velocity.y -= 18.0 * delta
+	var before := global_position
 	move_and_slide()
+	# step up small ledges (a deck edge, a kerb): Godot's character body doesn't do this by itself
+	if moving and is_on_wall() and (global_position - before).length() < SPEED * delta * 0.5:
+		var hop := Vector3(0, 0.32, 0)
+		var push := Vector3(v.x, 0, v.z) * delta * 2.0
+		if not test_move(global_transform.translated(hop), push):
+			global_position += hop + push
 	if global_position.y < -3.0:
 		global_position = world.spawn + Vector3(0, 1, 0)
 	if moving:
