@@ -124,8 +124,8 @@ func _mid_col(px: float, pz: float) -> Color:
 	var b := corner_col(int(ceil(px)), int(floor(pz)))
 	var c := corner_col(int(floor(px)), int(ceil(pz)))
 	var d := corner_col(int(ceil(px)), int(ceil(pz)))
-	var u := px - floor(px)
-	var v := pz - floor(pz)
+	var u := px - floorf(px)
+	var v := pz - floorf(pz)
 	return a.lerp(b, u).lerp(c.lerp(d, u), v)
 
 func _build_water() -> void:
