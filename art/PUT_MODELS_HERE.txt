@@ -1,0 +1,6 @@
+Drop character models here as .glb files named after the character, all lower case,
+spaces as underscores:  qaxlok.glb, chipper.glb, dingleberry.glb, little_chip.glb …
+
+The game uses a model automatically when the file exists (instead of the placeholder shapes),
+and gives it the toon look, keeping your vertex paint. Models should face +Z (towards the
+viewer in Godot's front view), stand on the origin, and be about 1 unit tall for a gnome.

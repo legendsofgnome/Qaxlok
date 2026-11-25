@@ -1,0 +1,35 @@
+; Engine configuration file.
+; Qaxlok's Village: Godot vertical slice (Godot 4.3 or newer).
+
+config_version=5
+
+[application]
+
+config/name="Qaxlok's Village"
+config/description="Vertical slice of the village level, rebuilt in Godot from the browser prototype."
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.3", "GL Compatibility")
+
+[autoload]
+
+Save="*res://scripts/save.gd"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=6
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=true
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+anti_aliasing/quality/msaa_3d=2
+lights_and_shadows/directional_shadow/size=2048
+lights_and_shadows/directional_shadow/soft_shadow_filter_quality=2
